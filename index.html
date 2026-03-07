@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horario Universitario</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0d0f;
+      --surface: #141418;
+      --surface2: #1c1c22;
+      --border: #2a2a32;
+      --accent: #7c6eff;
+      --accent2: #ff6b6b;
+      --text: #e8e8f0;
+      --text-dim: #6b6b7e;
+      --green: #4ade80;
+      --yellow: #fbbf24;
+      --cyan: #22d3ee;
+      --pink: #f472b6;
+      --orange: #fb923c;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    header {
+      padding: 24px 32px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--surface);
+    }
+
+    header h1 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--accent), var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    header span {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      background: var(--surface2);
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      height: calc(100vh - 65px);
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .sidebar-title {
+      font-size: 0.65rem;
+      font-family: 'Space Mono', monospace;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 8px 4px 4px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 4px;
+    }
+
+    .subject-group {
+      margin-bottom: 8px;
+    }
+
+    .subject-header {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      font-family: 'Space Mono', monospace;
+      padding: 4px 6px;
+      letter-spacing: 0.05em;
+    }
+
+    .section-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 6px;
+      padding: 8px 10px;
+      cursor: grab;
+      transition: all 0.15s ease;
+      user-select: none;
+      position: relative;
+      margin-bottom: 4px;
+    }
+
+    .section-card:hover {
+      border-color: var(--accent);
+      background: #1e1e28;
+      transform: translateX(2px);
+      box-shadow: 0 4px 20px rgba(124, 110, 255, 0.15);
+    }
+
+    .section-card.dragging {
+      opacity: 0.4;
+      cursor: grabbing;
+    }
+
+    .section-card.placed {
+      opacity: 0.35;
+      cursor: not-allowed;
+      filter: grayscale(0.5);
+    }
+
+    .section-card .nrc {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--accent);
+      margin-bottom: 3px;
+    }
+
+    .section-card .name {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+      margin-bottom: 2px;
+    }
+
+    .section-card .prof {
+      font-size: 0.62rem;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+    }
+
+    .section-card .slots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+    }
+
+    .slot-badge {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.55rem;
+      background: rgba(124, 110, 255, 0.15);
+      color: var(--accent);
+      padding: 2px 5px;
+      border-radius: 3px;
+      border: 1px solid rgba(124, 110, 255, 0.3);
+    }
+
+    /* MAIN SCHEDULE GRID */
+    .schedule-container {
+      padding: 20px;
+      overflow: auto;
+      background: var(--bg);
+    }
+
+    .schedule-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .schedule-header h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      font-family: 'Space Mono', monospace;
+    }
+
+    .clear-btn {
+      background: transparent;
+      border: 1px solid var(--accent2);
+      color: var(--accent2);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      padding: 6px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.05em;
+    }
+
+    .clear-btn:hover {
+      background: rgba(255, 107, 107, 0.1);
+    }
+
+    .grid-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      min-width: 700px;
+    }
+
+    .grid-table {
+      display: grid;
+      grid-template-columns: 64px repeat(7, 1fr);
+      width: 100%;
+    }
+
+    .grid-col-header {
+      background: var(--surface2);
+      padding: 10px 6px;
+      text-align: center;
+      font-size: 0.68rem;
+      font-weight: 700;
+      font-family: 'Space Mono', monospace;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      letter-spacing: 0.05em;
+    }
+
+    .time-label {
+      background: var(--surface2);
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.55rem;
+      color: var(--text-dim);
+      padding: 0 4px;
+    }
+
+    .grid-cell {
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      min-height: 36px;
+      position: relative;
+      transition: background 0.1s;
+    }
+
+    .grid-cell.drop-target {
+      background: rgba(124, 110, 255, 0.06);
+    }
+
+    .grid-cell.drag-over {
+      background: rgba(124, 110, 255, 0.18);
+      outline: 2px dashed var(--accent);
+      outline-offset: -2px;
+    }
+
+    .placed-block {
+      position: absolute;
+      inset: 2px;
+      border-radius: 5px;
+      padding: 4px 6px;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.15s;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      z-index: 2;
+    }
+
+    .placed-block:hover {
+      opacity: 0.8;
+      transform: scale(0.98);
+    }
+
+    .placed-block .pb-nrc {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.5rem;
+      opacity: 0.8;
+    }
+
+    .placed-block .pb-name {
+      font-size: 0.62rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .placed-block .pb-time {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.5rem;
+      opacity: 0.75;
+      margin-top: 1px;
+    }
+
+    .placed-block .pb-remove {
+      position: absolute;
+      top: 3px;
+      right: 4px;
+      font-size: 0.65rem;
+      opacity: 0;
+      transition: opacity 0.15s;
+      line-height: 1;
+    }
+
+    .placed-block:hover .pb-remove {
+      opacity: 1;
+    }
+
+    .conflict-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 107, 107, 0.15);
+      border: 2px solid var(--accent2);
+      border-radius: 5px;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6rem;
+      color: var(--accent2);
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      pointer-events: none;
+      animation: pulse 1s ease infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent2);
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-family: 'Space Mono', monospace;
+      color: var(--accent2);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.2s;
+      z-index: 100;
+      pointer-events: none;
+      max-width: 420px;
+      word-break: break-all;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .stat-chip {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-chip .val {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>⬡ HORARIO UNIVERSITARIO</h1>
+    <span>IINE · drag & drop</span>
+  </header>
+
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sidebar-title">// secciones disponibles</div>
+      <div id="sidebar-content"></div>
+    </div>
+
+    <div class="schedule-container">
+      <div class="schedule-header">
+        <h2>// horario consolidado</h2>
+        <button class="clear-btn" onclick="copyNRCs()" style="border-color: var(--cyan); color: var(--cyan);">⎘ COPIAR
+          NRCs</button>
+        <button class="clear-btn" onclick="clearAll()">⟳ LIMPIAR TODO</button>
+      </div>
+
+      <div class="stats-bar" id="stats-bar">
+        <div class="stat-chip">Materias colocadas: <span class="val" id="stat-placed">0</span></div>
+        <div class="stat-chip">Horas semanales: <span class="val" id="stat-hours">0</span></div>
+        <div class="stat-chip" id="stat-conflict" style="border-color: var(--accent2); display:none;">⚠ CONFLICTO
+          DETECTADO</div>
+      </div>
+
+      <div class="grid-wrap">
+        <div class="grid-table" id="grid-table"></div>
+      </div>
+
+      <p style="font-family:'Space Mono',monospace;font-size:0.58rem;color:var(--text-dim);margin-top:12px;">
+        ↑ arrastra secciones desde el panel izquierdo · click en bloque colocado para eliminarlo
+      </p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ─── DATOS ────────────────────────────────────────────────────────────────────
+    const COLORS = [
+      '#7c6eff', '#22d3ee', '#4ade80', '#fbbf24', '#f472b6', '#fb923c', '#a78bfa', '#34d399'
+    ];
+
+    const DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    const DAY_FULL = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
+    // Horas del grid: 07:00 a 21:00 en bloques de 30 min → 28 filas
+    const START_HOUR = 7;
+    const END_HOUR = 21;
+    const SLOTS_PER_HOUR = 2; // cada slot = 30 min
+    const TOTAL_SLOTS = (END_HOUR - START_HOUR) * SLOTS_PER_HOUR; // 28
+
+    function timeToSlot(hhmm) {
+      const [h, m] = hhmm.split(':').map(Number);
+      return (h - START_HOUR) * SLOTS_PER_HOUR + Math.floor(m / 30);
+    }
+
+    const SECTIONS = [
+      {
+        id: 'S1', subject: 'Arquitectura del Computador', code: 'INFO-02015', nrc: '26992',
+        prof: 'Murillo Gonzalez, Luz Karime', color: COLORS[0],
+        slots: [
+          { day: 1, start: '08:00', end: '09:50' },
+          { day: 4, start: '13:00', end: '14:50' }
+        ]
+      },
+      {
+        id: 'S2', subject: 'Arquitectura del Computador', code: 'INFO-02015', nrc: '25785',
+        prof: 'Ruíz Rondón, Eva Alexandra', color: COLORS[1],
+        slots: [
+          { day: 0, start: '13:00', end: '14:50' },
+          { day: 1, start: '13:00', end: '14:50' }
+        ]
+      },
+      {
+        id: 'S3', subject: 'Arquitectura del Computador', code: 'INFO-02015', nrc: '26990',
+        prof: 'Ruíz Rondón, Eva Alexandra', color: COLORS[2],
+        slots: [
+          { day: 0, start: '08:00', end: '09:50' },
+          { day: 1, start: '08:00', end: '09:50' }
+        ]
+      },
+      {
+        id: 'S4', subject: 'IA: Aprendizaje Automático', code: 'INFO-02020', nrc: '25795',
+        prof: 'La Fontaine García, Gustavo A.', color: COLORS[3],
+        slots: [
+          { day: 2, start: '13:00', end: '14:50' },
+          { day: 3, start: '10:00', end: '11:50' }
+        ]
+      },
+      {
+        id: 'S5', subject: 'Inglés II', code: 'INFO-02021', nrc: '27093',
+        prof: 'González Nahmens, Amasilis', color: COLORS[4],
+        slots: [{ day: 2, start: '15:00', end: '17:50' }]
+      },
+      {
+        id: 'S6', subject: 'Inglés II', code: 'INFO-02021', nrc: '25775',
+        prof: 'González Nahmens, Amasilis', color: COLORS[5],
+        slots: [{ day: 1, start: '15:00', end: '17:50' }]
+      },
+      {
+        id: 'S7', subject: 'Inglés II', code: 'INFO-02021', nrc: '25774',
+        prof: 'González Nahmens, Amasilis', color: COLORS[6],
+        slots: [{ day: 0, start: '15:00', end: '17:50' }]
+      },
+      {
+        id: 'S8', subject: 'Desarrollo de Software', code: 'INFO-02025', nrc: '27111',
+        prof: 'Ponce Mavárez, Bismarck R.', color: COLORS[7],
+        slots: [
+          { day: 0, start: '18:00', end: '19:50' },
+          { day: 3, start: '16:00', end: '17:50' }
+        ]
+      },
+      {
+        id: 'S9', subject: 'Desarrollo de Software', code: 'INFO-02025', nrc: '25783',
+        prof: 'Alonzo Sánchez, Carlos E.', color: COLORS[0],
+        slots: [
+          { day: 0, start: '08:00', end: '09:50' },
+          { day: 4, start: '16:00', end: '17:50' }
+        ]
+      },
+      {
+        id: 'S10', subject: 'Métodos Numéricos', code: 'FING-02010', nrc: '27019',
+        prof: 'Por Asignar', color: COLORS[1],
+        slots: [{ day: 3, start: '08:00', end: '09:50' }]
+      },
+      {
+        id: 'S11', subject: 'Arq. Computador (Práctica)', code: 'INFO-P2015', nrc: '26995',
+        prof: 'Ruíz Rondón, Eva Alexandra', color: COLORS[2],
+        slots: [{ day: 0, start: '15:00', end: '16:50' }]
+      },
+      {
+        id: 'S12', subject: 'Arq. Computador (Práctica)', code: 'INFO-P2015', nrc: '26994',
+        prof: 'Ruíz Rondón, Eva Alexandra', color: COLORS[3],
+        slots: [{ day: 1, start: '15:00', end: '16:50' }]
+      },
+      {
+        id: 'S13', subject: 'Arq. Computador (Práctica)', code: 'INFO-P2015', nrc: '26154',
+        prof: 'Ruíz Rondón, Eva Alexandra', color: COLORS[4],
+        slots: [{ day: 0, start: '10:00', end: '11:50' }]
+      },
+      {
+        id: 'S14', subject: 'Arq. Computador (Práctica)', code: 'INFO-P2015', nrc: '25802',
+        prof: 'Ruíz Rondón, Eva Alexandra', color: COLORS[5],
+        slots: [{ day: 1, start: '10:00', end: '11:50' }]
+      },
+
+      {
+        id: 'S41', subject: 'Arquitecturas Empresariales', code: 'INFO-02029', nrc: '26986',
+        prof: 'Ortega, Dinarle Milagro', color: COLORS[0],
+        slots: [{ day: 5, start: '15:00', end: '17:50' }]
+      },
+
+      // ── ELECTIVAS y nuevas materias ────────────────────────────────────────────
+      {
+        id: 'S15', subject: 'Electiva: Lengua de Señas Venezolana', code: 'FHYE-80372', nrc: '25440',
+        prof: 'Rumbos Ruíz, Henry José', color: COLORS[6],
+        slots: [{ day: 0, start: '13:00', end: '14:50' }]
+      },
+      {
+        id: 'S16', subject: 'Electiva: Enigmas in Edgar Allan Poe', code: 'FHYE-80387', nrc: '26619',
+        prof: 'León López, Elida Celestina', color: COLORS[7],
+        slots: [{ day: 2, start: '15:00', end: '16:50' }]
+      },
+      {
+        id: 'S17', subject: 'Literatura General: Medioevo', code: 'LETR-02010', nrc: '26243',
+        prof: 'Goyo Ponte, Einar Santiago', color: COLORS[0],
+        slots: [{ day: 0, start: '15:00', end: '17:50' }]
+      },
+      {
+        id: 'S18', subject: 'Pensamiento y Estética', code: 'LETR-02034', nrc: '26878',
+        prof: 'Di Giuseppe Febles, Giann A.', color: COLORS[1],
+        slots: [
+          { day: 0, start: '13:00', end: '14:50' },
+          { day: 3, start: '13:00', end: '14:50' }
+        ]
+      },
+      {
+        id: 'S19', subject: 'Electiva: Fundamentos del Italiano', code: 'UCAB-80013', nrc: '26320',
+        prof: 'Rossi Contrera, Juan Miguel', color: COLORS[2],
+        slots: [{ day: 4, start: '12:00', end: '13:50' }]
+      },
+      {
+        id: 'S20', subject: 'Computación en la Nube', code: 'INFO-02028', nrc: '25995',
+        prof: 'Bravo Viloria, Jhoberth A.', color: COLORS[3],
+        slots: [{ day: 0, start: '17:00', end: '18:50' }]
+      },
+      {
+        id: 'S21', subject: 'Computación en la Nube (Práctica)', code: 'INFO-P2028', nrc: '25805',
+        prof: 'Bravo Viloria, Jhoberth A.', color: COLORS[4],
+        slots: [{ day: 2, start: '17:00', end: '18:50' }]
+      },
+      {
+        id: 'S22', subject: 'Computación en la Nube (Práctica)', code: 'INFO-P2028', nrc: '25804',
+        prof: 'Bravo Viloria, Jhoberth A.', color: COLORS[5],
+        slots: [{ day: 1, start: '17:00', end: '18:50' }]
+      },
+      {
+        id: 'S23', subject: 'Consultoría y Marca Personal', code: 'UCAB-02002', nrc: '26993',
+        prof: 'Sarmiento Arteaga, Mariely C.', color: COLORS[6],
+        slots: [{ day: 2, start: '08:00', end: '09:50' }]
+      },
+      {
+        id: 'S24', subject: 'Electiva: Internet de las Cosas', code: 'INFO-82004', nrc: '27258',
+        prof: 'Russoniello Antonacci, Antonio', color: COLORS[7],
+        slots: [{ day: 3, start: '13:00', end: '15:50' }]
+      },
+      {
+        id: 'S25', subject: 'Electiva: Desarrollo Software Fintech', code: 'FING-80425', nrc: '25447',
+        prof: 'Fernandes Agrela, Ana Karina', color: COLORS[0],
+        slots: [{ day: 1, start: '12:00', end: '14:50' }]
+      },
+      {
+        id: 'S26', subject: 'Electiva: Introducción a la Blockchain', code: 'INFO-82003', nrc: '27118',
+        prof: 'Russoniello Antonacci, Antonio', color: COLORS[1],
+        slots: [{ day: 3, start: '09:00', end: '11:50' }]
+      },
+      {
+        id: 'S27', subject: 'Electiva: Videojuegos con Unity', code: 'INFO-82001', nrc: '25809',
+        prof: 'Gómez Chacón, Carlos Esteban', color: COLORS[2],
+        slots: [{ day: 2, start: '08:00', end: '10:50' }]
+      },
+      {
+        id: 'S28', subject: 'Electiva: Implementación Redes Cisco', code: 'TELE-82002', nrc: '26903',
+        prof: 'Level Manzo, Eudys Alexander', color: COLORS[3],
+        slots: [{ day: 1, start: '14:00', end: '16:50' }]
+      },
+      {
+        id: 'S29', subject: 'Electiva: Introduction to Data Science', code: 'ECON-8I003', nrc: '26534',
+        prof: 'Cunto Morales, Giorgio', color: COLORS[4],
+        slots: [{ day: 0, start: '07:00', end: '09:50' }]
+      },
+      {
+        id: 'S30', subject: 'Electiva: Planificación Estratégica', code: 'ADCO-00429', nrc: '25298',
+        prof: 'Venegas Pereira, Gerardo Luis', color: COLORS[5],
+        slots: [{ day: 6, start: '10:00', end: '12:50' }]
+      },
+      {
+        id: 'S31', subject: 'Electiva: Neuromarketing', code: 'ADCO-00444', nrc: '25307',
+        prof: 'Bocaranda León, Rafael José', color: COLORS[6],
+        slots: [{ day: 1, start: '13:00', end: '15:50' }]
+      },
+      {
+        id: 'S32', subject: 'Electiva: Inglés Intercultural', code: 'UCAB-80011', nrc: '25909',
+        prof: 'Almeida Franca, Luis Alberto', color: COLORS[7],
+        slots: [{ day: 4, start: '13:00', end: '14:50' }]
+      },
+      {
+        id: 'S33', subject: 'Electiva: Inglés para Entornos Globales', code: 'UCAB-80012', nrc: '25910',
+        prof: 'Rengel Rivas, Liz Yaremi', color: COLORS[0],
+        slots: [{ day: 2, start: '15:00', end: '16:50' }]
+      },
+      {
+        id: 'S34', subject: 'Electiva: Intro Idioma Italiano', code: 'UCAB-80008', nrc: '25811',
+        prof: 'Alba Álvarez, María Gabriela', color: COLORS[1],
+        slots: [{ day: 3, start: '13:00', end: '14:50' }]
+      },
+      {
+        id: 'S35', subject: 'Electiva: Introducción al Francés', code: 'UCAB-80014', nrc: '26321',
+        prof: 'Rodriguez Carrillo, Karen H.', color: COLORS[2],
+        slots: [{ day: 0, start: '12:00', end: '13:50' }]
+      },
+      {
+        id: 'S36', subject: 'Electiva: Intro Idioma Portugués', code: 'UCAB-80010', nrc: '25908',
+        prof: 'Tavares Lourenco, Ricardo', color: COLORS[3],
+        slots: [{ day: 1, start: '09:00', end: '10:50' }]
+      },
+      {
+        id: 'S37', subject: 'Electiva: Creación en Medios Digitales', code: 'LETR-02030', nrc: '26257',
+        prof: 'Marquina Lozada, Victoria A.', color: COLORS[4],
+        slots: [{ day: 5, start: '07:00', end: '09:50' }]
+      },
+      {
+        id: 'S38', subject: 'Electiva: Auxilio Médico Integral', code: 'CISO-80560', nrc: '26871',
+        prof: 'De Faria Freitas, Christopher O.', color: COLORS[5],
+        slots: [{ day: 1, start: '13:00', end: '15:50' }]
+      },
+      {
+        id: 'S39', subject: 'Electiva: Canto Coral', code: 'FHYE-80390', nrc: '26617',
+        prof: 'Espinoza Quintero, Rafael E.', color: COLORS[6],
+        slots: [{ day: 0, start: '13:00', end: '15:50' }]
+      },
+      {
+        id: 'S40', subject: 'Electiva: Criptoeconomía', code: 'FACE-80491', nrc: '26925',
+        prof: 'Por Asignar', color: COLORS[7],
+        slots: [{ day: 3, start: '10:00', end: '12:50' }]
+      },
+    ];
+
+    // ─── STATE ────────────────────────────────────────────────────────────────────
+    let placedSections = []; // ids de secciones colocadas
+    let draggingId = null;
+
+    // ─── BUILD SIDEBAR ────────────────────────────────────────────────────────────
+    function buildSidebar() {
+      const container = document.getElementById('sidebar-content');
+      container.innerHTML = '';
+
+      // group by code
+      const groups = {};
+      SECTIONS.forEach(s => {
+        if (!groups[s.code]) groups[s.code] = [];
+        groups[s.code].push(s);
+      });
+
+      Object.entries(groups).forEach(([code, sections]) => {
+        const g = document.createElement('div');
+        g.className = 'subject-group';
+
+        const hdr = document.createElement('div');
+        hdr.className = 'subject-header';
+        hdr.textContent = code;
+        g.appendChild(hdr);
+
+        sections.forEach(sec => {
+          const card = document.createElement('div');
+          card.className = 'section-card' + (placedSections.includes(sec.id) ? ' placed' : '');
+          card.id = 'card-' + sec.id;
+          card.style.borderLeftColor = sec.color;
+          card.draggable = !placedSections.includes(sec.id);
+
+          card.innerHTML = `
+        <div class="nrc">NRC ${sec.nrc}</div>
+        <div class="name">${sec.subject}</div>
+        <div class="prof">${sec.prof}</div>
+        <div class="slots">${sec.slots.map(sl =>
+            `<span class="slot-badge">${DAY_FULL[sl.day].substring(0, 3)} ${sl.start}–${sl.end}</span>`
+          ).join('')}</div>
+      `;
+
+          if (!placedSections.includes(sec.id)) {
+            card.addEventListener('dragstart', e => {
+              draggingId = sec.id;
+              card.classList.add('dragging');
+              e.dataTransfer.effectAllowed = 'copy';
+            });
+            card.addEventListener('dragend', () => {
+              card.classList.remove('dragging');
+            });
+          }
+
+          g.appendChild(card);
+        });
+
+        container.appendChild(g);
+      });
+    }
+
+    // ─── BUILD GRID ───────────────────────────────────────────────────────────────
+    function buildGrid() {
+      const table = document.getElementById('grid-table');
+      table.innerHTML = '';
+
+      // Headers row
+      const cornerCell = document.createElement('div');
+      cornerCell.className = 'grid-col-header';
+      cornerCell.style.background = 'var(--bg)';
+      table.appendChild(cornerCell);
+
+      DAYS.forEach(d => {
+        const h = document.createElement('div');
+        h.className = 'grid-col-header';
+        h.textContent = d;
+        table.appendChild(h);
+      });
+
+      // Time rows
+      for (let slot = 0; slot < TOTAL_SLOTS; slot++) {
+        const h = START_HOUR + Math.floor(slot / SLOTS_PER_HOUR);
+        const m = (slot % SLOTS_PER_HOUR) * 30;
+
+        const timeLabel = document.createElement('div');
+        timeLabel.className = 'time-label';
+        if (m === 0) timeLabel.textContent = `${String(h).padStart(2, '0')}:00`;
+        table.appendChild(timeLabel);
+
+        for (let day = 0; day < 7; day++) {
+          const cell = document.createElement('div');
+          cell.className = 'grid-cell drop-target';
+          cell.dataset.day = day;
+          cell.dataset.slot = slot;
+
+          cell.addEventListener('dragover', e => {
+            e.preventDefault();
+            cell.classList.add('drag-over');
+          });
+          cell.addEventListener('dragleave', () => cell.classList.remove('drag-over'));
+          cell.addEventListener('drop', e => {
+            e.preventDefault();
+            cell.classList.remove('drag-over');
+            if (draggingId) handleDrop(draggingId);
+          });
+
+          table.appendChild(cell);
+        }
+      }
+
+      // Re-render placed blocks
+      renderPlacedBlocks();
+    }
+
+    // ─── PLACE / REMOVE ───────────────────────────────────────────────────────────
+    function handleDrop(secId) {
+      const sec = SECTIONS.find(s => s.id === secId);
+      if (!sec || placedSections.includes(secId)) return;
+
+      // Check conflicts
+      const conflict = checkConflict(sec);
+      if (conflict) {
+        showToast(`⚠ Conflicto con ${conflict.subject} (${conflict.nrc})`);
+      }
+
+      placedSections.push(secId);
+      buildSidebar();
+      renderPlacedBlocks();
+      updateStats();
+      draggingId = null;
+    }
+
+    function removeSection(secId) {
+      placedSections = placedSections.filter(id => id !== secId);
+      buildSidebar();
+      renderPlacedBlocks();
+      updateStats();
+    }
+
+    function clearAll() {
+      placedSections = [];
+      buildSidebar();
+      renderPlacedBlocks();
+      updateStats();
+    }
+
+    function checkConflict(newSec) {
+      for (const pid of placedSections) {
+        const placed = SECTIONS.find(s => s.id === pid);
+        for (const ns of newSec.slots) {
+          for (const ps of placed.slots) {
+            if (ns.day !== ps.day) continue;
+            const ns0 = timeToSlot(ns.start), ns1 = timeToSlot(ns.end);
+            const ps0 = timeToSlot(ps.start), ps1 = timeToSlot(ps.end);
+            if (ns0 < ps1 && ns1 > ps0) return placed;
+          }
+        }
+      }
+      return null;
+    }
+
+    // ─── RENDER PLACED BLOCKS ─────────────────────────────────────────────────────
+    function renderPlacedBlocks() {
+      // Clear all placed blocks
+      document.querySelectorAll('.placed-block, .conflict-overlay').forEach(el => el.remove());
+
+      // Track occupancy for conflict detection
+      const occupancy = {}; // key: `day-slot` → [secIds]
+
+      placedSections.forEach(secId => {
+        const sec = SECTIONS.find(s => s.id === secId);
+        sec.slots.forEach(sl => {
+          const s0 = timeToSlot(sl.start);
+          const s1 = timeToSlot(sl.end);
+          for (let s = s0; s < s1; s++) {
+            const key = `${sl.day}-${s}`;
+            if (!occupancy[key]) occupancy[key] = [];
+            occupancy[key].push(secId);
+          }
+        });
+      });
+
+      placedSections.forEach(secId => {
+        const sec = SECTIONS.find(s => s.id === secId);
+        sec.slots.forEach(sl => {
+          const s0 = timeToSlot(sl.start);
+          const s1 = timeToSlot(sl.end);
+
+          // Find the first cell of the span
+          const firstCell = document.querySelector(
+            `.grid-cell[data-day="${sl.day}"][data-slot="${s0}"]`
+          );
+          if (!firstCell) return;
+
+          const spanLen = s1 - s0;
+          const cellH = firstCell.offsetHeight || 36;
+
+          const block = document.createElement('div');
+          block.className = 'placed-block';
+          block.style.background = sec.color + 'cc';
+          block.style.borderLeft = `3px solid ${sec.color}`;
+          block.style.color = '#fff';
+          block.style.height = `calc(${spanLen} * 100% + ${spanLen - 1}px)`;
+          block.style.zIndex = 10;
+
+          block.innerHTML = `
+        <div class="pb-nrc">NRC ${sec.nrc}</div>
+        <div class="pb-name">${sec.subject}</div>
+        <div class="pb-time">${sl.start}–${sl.end}</div>
+        <div class="pb-remove">✕</div>
+      `;
+          block.title = `${sec.subject} · ${sec.prof}\nClick para eliminar`;
+          block.addEventListener('click', () => removeSection(secId));
+
+          // Check conflict at this slot
+          const hasConflict = Array.from({ length: spanLen }, (_, i) => {
+            const key = `${sl.day}-${s0 + i}`;
+            return (occupancy[key] || []).length > 1;
+          }).some(Boolean);
+
+          firstCell.style.position = 'relative';
+          firstCell.appendChild(block);
+
+          if (hasConflict) {
+            const overlay = document.createElement('div');
+            overlay.className = 'conflict-overlay';
+            overlay.textContent = '!';
+            firstCell.appendChild(overlay);
+          }
+        });
+      });
+
+      // Show/hide conflict chip
+      const hasAnyConflict = Object.values(occupancy).some(v => v.length > 1);
+      document.getElementById('stat-conflict').style.display = hasAnyConflict ? 'flex' : 'none';
+    }
+
+    // ─── STATS ────────────────────────────────────────────────────────────────────
+    function updateStats() {
+      document.getElementById('stat-placed').textContent = placedSections.length;
+
+      let totalMinutes = 0;
+      placedSections.forEach(id => {
+        const sec = SECTIONS.find(s => s.id === id);
+        sec.slots.forEach(sl => {
+          const [h0, m0] = sl.start.split(':').map(Number);
+          const [h1, m1] = sl.end.split(':').map(Number);
+          totalMinutes += (h1 * 60 + m1) - (h0 * 60 + m0);
+        });
+      });
+      document.getElementById('stat-hours').textContent =
+        (totalMinutes / 60).toFixed(1) + 'h';
+    }
+
+    // ─── TOAST ────────────────────────────────────────────────────────────────────
+    function showToast(msg, color) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.borderLeftColor = color || 'var(--accent2)';
+      t.style.color = color || 'var(--accent2)';
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    // ─── COPY NRCs ────────────────────────────────────────────────────────────────
+    function copyNRCs() {
+      if (placedSections.length === 0) {
+        showToast('⚠ No hay secciones colocadas aún');
+        return;
+      }
+      const nrcs = placedSections.map(id => {
+        const sec = SECTIONS.find(s => s.id === id);
+        return sec.nrc;
+      });
+      const text = nrcs.join(', ');
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(`✓ ${nrcs.length} NRC${nrcs.length > 1 ? 's' : ''} copiados: ${text}`, 'var(--green)');
+      }).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast(`✓ NRCs copiados: ${text}`, 'var(--green)');
+      });
+    }
+
+    // ─── INIT ─────────────────────────────────────────────────────────────────────
+    buildSidebar();
+    buildGrid();
+    updateStats();
+  </script>
+</body>
+
+</html>
