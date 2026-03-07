@@ -11,7 +11,7 @@ https://ingenieria.ucab.edu.ve/informatica/la-escuela/caracas/procesos-academico
 ## Créditos
 
 - **Datos y diseño**: generados a partir de la perspectiva horaria publicada por la escuela.
-- **Desarrollador**: Proyecto por [tu nombre/a mí] con JavaScript, HTML y CSS.
+- **Desarrollador**: Proyecto claude con JavaScript, HTML y CSS.
 - **Inspiración**: Interfaz de horario tipo "drag & drop" popular entre estudiantes de informática.
 
 > Si utilizas este código, atribuye adecuadamente y no dudes en adaptarlo a tu propia planificación académica.
